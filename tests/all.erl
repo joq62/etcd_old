@@ -55,7 +55,34 @@ host_spec()->
     io:format(" N3 OK! ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
     ok=host_spec_tests:start(N4),
     io:format(" N4 OK! ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
-    
+
+    %% kill N3
+    io:format("kill N3  ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    rpc:call(N3,init,stop,[],5000),
+    timer:sleep(1500),
+    {badrpc,nodedown}=rpc:call(N3,db_host_spec,read,["c50"],5000),
+    io:format("Kill N3  OK! ~p~n",[{?MODULE,?LINE}]),
+  
+    yes=rpc:call(N4,mnesia,system_info,[],5000),
+
+    {ok,N3}=test_nodes:start_slave("c3"),
+    [rpc:call(N3,net_adm,ping,[N],5000)||N<-AllNodes],
+    true=rpc:call(N3,code,add_patha,["ebin"],5000),    
+    true=rpc:call(N3,code,add_patha,["tests_ebin"],5000),     
+    true=rpc:call(N3,code,add_patha,["common/ebin"],5000),     
+    ok=rpc:call(N3,application,start,[common],5000), 
+    true=rpc:call(N3,code,add_patha,["sd/ebin"],5000),     
+    ok=rpc:call(N3,application,start,[sd],5000), 
+    ok=rpc:call(N3,application,start,[etcd],5000),
+    pong=rpc:call(N3,etcd,ping,[],5000),
+    pong=rpc:call(N3,db,ping,[],5000),
+       
+    ok=host_spec_tests:start(N1),
+    ok=host_spec_tests:start(N2),
+    ok=host_spec_tests:start(N3),
+    io:format("Restart N3 OK! ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=host_spec_tests:start(N4),
+
     ok.
 
     
