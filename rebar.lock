@@ -1,0 +1,4 @@
+[{<<"db_lib">>,
+  {git,"https://github.com/joq62/db_lib.git",
+       {ref,"6d1628b49d1aa2661980d79ffc540c2fe79b0d87"}},
+  0}].
