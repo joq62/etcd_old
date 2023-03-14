@@ -28,6 +28,7 @@ start([_ClusterSpec,_HostSpec])->
     ok=setup(),
     ok=test_1(),
     ok=host_spec(),
+    ok=appl_deployment(),
   %  ok=test_2(),
   %  ok=test_3(),
    
@@ -36,7 +37,6 @@ start([_ClusterSpec,_HostSpec])->
     timer:sleep(2000),
 
     ok.
-
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -80,6 +80,54 @@ host_spec()->
     ok=host_spec_tests:start(N1),
     ok=host_spec_tests:start(N2),
     ok=host_spec_tests:start(N3),
+    io:format("Restart N3 OK! ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=host_spec_tests:start(N4),
+
+    ok.
+
+    
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+appl_deployment()->
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    AllNodes=test_nodes:get_nodes(),
+    [N1,N2,N3,N4]=AllNodes,
+    ok=appl_deployment_tests:start(N1),
+    io:format(" N1 OK! ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=appl_deployment_tests:start(N2),
+    io:format(" N2 OK! ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=appl_deployment_tests:start(N3),
+    io:format(" N3 OK! ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=appl_deployment_tests:start(N4),
+    io:format(" N4 OK! ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+
+    %% kill N3
+    io:format("kill N3  ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    rpc:call(N3,init,stop,[],5000),
+    timer:sleep(1500),
+    {badrpc,nodedown}=rpc:call(N3,db_host_spec,read,["c50"],5000),
+    io:format("Kill N3  OK! ~p~n",[{?MODULE,?LINE}]),
+  
+    yes=rpc:call(N4,mnesia,system_info,[],5000),
+
+    {ok,N3}=test_nodes:start_slave("c3"),
+    [rpc:call(N3,net_adm,ping,[N],5000)||N<-AllNodes],
+    true=rpc:call(N3,code,add_patha,["ebin"],5000),    
+    true=rpc:call(N3,code,add_patha,["tests_ebin"],5000),     
+    true=rpc:call(N3,code,add_patha,["common/ebin"],5000),     
+    ok=rpc:call(N3,application,start,[common],5000), 
+    true=rpc:call(N3,code,add_patha,["sd/ebin"],5000),     
+    ok=rpc:call(N3,application,start,[sd],5000), 
+    ok=rpc:call(N3,application,start,[etcd],5000),
+    pong=rpc:call(N3,etcd,ping,[],5000),
+    pong=rpc:call(N3,db,ping,[],5000),
+       
+    ok=appl_deployment_tests:start(N1),
+    ok=appl_deployment_tests:start(N2),
+    ok=appl_deployment_tests:start(N3),
     io:format("Restart N3 OK! ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
     ok=host_spec_tests:start(N4),
 
@@ -141,89 +189,7 @@ test_1()->
     io:format("N4 dist OK! ~p~n",[{?MODULE,?LINE}]),
     ok.
 
-%%--------------------------------------------------------------------
-%% @doc
-%% @spec
-%% @end
-%%--------------------------------------------------------------------
-test_2()->
-    AllNodes=test_nodes:get_nodes(),
-    [N1,N2,N3,N4]=AllNodes,
-    P1={joakim,leche,1962},
-    P2={asa,leche,1966},
-    P3={david,leche,1995},
-    P4={erika,leche,1998},
-
-
-    {atomic,ok}=rpc:call(N1,person,create,[joakim,leche,1962],5000),
-    [P1]=lists:sort(rpc:call(N1,person,read_all,[],5000)),
-    [P1]=lists:sort(rpc:call(N2,person,read_all,[],5000)),
-    [P1]=lists:sort(rpc:call(N3,person,read_all,[],5000)),
-    [P1]=lists:sort(rpc:call(N4,person,read_all,[],5000)),
-    io:format("Create P1  OK! ~p~n",[{?MODULE,?LINE}]),
-
-    {atomic,ok}=rpc:call(N2,person,create,[asa,leche,1966],5000),
-    [P2,P1]=lists:sort(rpc:call(N1,person,read_all,[],5000)),
-    io:format("Create P1,P2   OK! ~p~n",[{?MODULE,?LINE}]),
-    {atomic,ok}=rpc:call(N3,person,create,[david,leche,1995],5000),
-    {atomic,ok}=rpc:call(N4,person,create,[erika,leche,1998],5000),
-
-    [P2,P3,P4,P1]=lists:sort(rpc:call(N1,person,read_all,[],5000)),
-    [P2,P3,P4,P1]=lists:sort(rpc:call(N2,person,read_all,[],5000)),
-    [P2,P3,P4,P1]=lists:sort(rpc:call(N3,person,read_all,[],5000)),
-    [P2,P3,P4,P1]=lists:sort(rpc:call(N4,person,read_all,[],5000)),
-    io:format("Create P1,P2, P3, P4   OK! ~p~n",[{?MODULE,?LINE}]),
-    ok.
-    
-    
- %%--------------------------------------------------------------------
-%% @doc
-%% @spec
-%% @end
-%%--------------------------------------------------------------------
-test_3()->
-    AllNodes=test_nodes:get_nodes(),
-    [N1,N2,N3,N4]=AllNodes,
-    P1={joakim,leche,1962},
-    P2={asa,leche,1966},
-    P3={david,leche,1995},
-    P4={erika,leche,1998},
-
- %% kill N3
-
-    io:format("kill N3  ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
-    rpc:call(N3,init,stop,[],5000),
-    timer:sleep(1500),
- %   yes=rpc:call(N4,mnesia,system_info,[],5000),
-
-    [P2,P3,P4,P1]=lists:sort(rpc:call(N1,person,read_all,[],5000)),
-    [P2,P3,P4,P1]=lists:sort(rpc:call(N2,person,read_all,[],5000)),
-    {badrpc,nodedown}=rpc:call(N3,person,read_all,[],5000),
-    [P2,P3,P4,P1]=lists:sort(rpc:call(N4,person,read_all,[],5000)),
-    io:format("Kill N3  OK! ~p~n",[{?MODULE,?LINE}]),
-
-    {ok,N3}=test_nodes:start_slave("c3"),
-    [rpc:call(N3,net_adm,ping,[N],5000)||N<-AllNodes],
-    true=rpc:call(N3,code,add_patha,["ebin"],5000),    
-    true=rpc:call(N3,code,add_patha,["tests_ebin"],5000),     
-    true=rpc:call(N3,code,add_patha,["common/ebin"],5000),     
-    ok=rpc:call(N3,application,start,[common],5000), 
-    true=rpc:call(N3,code,add_patha,["sd/ebin"],5000),     
-    ok=rpc:call(N3,application,start,[sd],5000), 
-    ok=rpc:call(N3,application,start,[etcd],5000),
-    pong=rpc:call(N3,etcd,ping,[],5000),
-    pong=rpc:call(N3,db,ping,[],5000),
-
- %   yes=rpc:call(N4,mnesia,system_info,[],5000),
-    
-    [P2,P3,P4,P1]=lists:sort(rpc:call(N1,person,read_all,[],5000)),
-    [P2,P3,P4,P1]=lists:sort(rpc:call(N2,person,read_all,[],5000)),
-    [P2,P3,P4,P1]=lists:sort(rpc:call(N3,person,read_all,[],5000)),
-    [P2,P3,P4,P1]=lists:sort(rpc:call(N4,person,read_all,[],5000)),
-    io:format("Restart  N3  OK! ~p~n",[{?MODULE,?LINE}]),
-    ok.
-
-
+%% -------------------------------------------------------------------
 %% Function: available_hosts()
 %% Description: Based on hosts.config file checks which hosts are avaible
 %% Returns: List({HostId,Ip,SshPort,Uid,Pwd}
