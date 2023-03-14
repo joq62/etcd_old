@@ -1,10 +1,5 @@
--ifdef(debug).
--define(ApplSpecDir,"application_specs_test").
--define(GitPathApplSpecs,"https://github.com/joq62/application_specs_test.git").
--else.
 -define(ApplSpecDir,"application_specs").
 -define(GitPathApplSpecs,"https://github.com/joq62/application_specs.git").
--endif.
 
 -define(TABLE,application_spec).
 -define(RECORD,application_spec).
@@ -13,7 +8,5 @@
 		 appl_name,
 		 vsn,
 		 app,
-		 gitpath,
-		 local_resource_type,
-		 target_resource_type
+		 gitpath		
 		}).
