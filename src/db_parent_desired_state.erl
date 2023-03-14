@@ -19,7 +19,7 @@
 -export([read_all/0,read/1,read/2,get_all_id/0]).
 -export([do/1]).
 -export([member/1]).
--export([]).
+-export([load_desired_state/1]).
 
 
 %%--------------------------------------------------------------------
@@ -186,3 +186,49 @@ do(Q) ->
 %% @spec
 %% @end
 %%--------------------------------------------------------------------
+load_desired_state(ClusterSpec)->
+    Result=case db_cluster_spec:read(pods,ClusterSpec) of
+	       {ok,Pods}->	  
+		   LoadResult=[{error,Reason}|| {error,Reason}<-load_desired_state(Pods,ClusterSpec,[])],
+		   case LoadResult of
+		       []->
+			   ok;
+		       ErrorList ->
+			   {error,ErrorList}
+		   end;
+	       Reason->
+		   sd:cast(nodelog,nodelog,log,[warning,?MODULE_STRING,?LINE,["Error: ,db_cluster_spec,read,[pods,ClusterSpec: ",Reason,?MODULE,?LINE]]),
+		   {error,Reason}
+	   end,
+    Result.
+    
+load_desired_state([],_ClusterSpec,Acc)->
+    Acc;
+load_desired_state([{_NumPods,HostSpec}|T],ClusterSpec,Acc) ->
+    false=lists:member({ok,HostSpec},Acc),
+    Result=case db_cluster_spec:read(root_dir,ClusterSpec) of
+	       {ok,RootDir}->
+		   case db_host_spec:read(hostname,HostSpec) of 
+		       {ok,HostName}->
+			   NodeName=ClusterSpec++"_parent",
+			   ParentNode=list_to_atom(NodeName++"@"++HostName),
+			   RootPaArgs=" -pa "++RootDir++" ",
+			   PathCommonFuns=filename:join([RootDir,"*","ebin"]),
+			   CommonFunsPaArgs=" -pa "++PathCommonFuns,
+			   EnvArgs=" ",
+			   case db_parent_desired_state:create(ParentNode,NodeName,ClusterSpec,HostSpec,
+							       RootPaArgs,CommonFunsPaArgs,EnvArgs) of
+			       {atomic,ok}->
+				   ok;
+			       Reason->
+				   {error,Reason}
+			   end;
+		       Reason->
+			   sd:cast(nodelog,nodelog,log,[warning,?MODULE_STRING,?LINE,["Error: ,db_host_spec,read,[hostname,HostSpec: ",Reason,?MODULE,?LINE]]),
+			   {error,Reason}
+		   end;
+	       Reason->
+		   sd:cast(nodelog,nodelog,log,[warning,?MODULE_STRING,?LINE,["Error: ,db_cluster_spec,read,[root_dir,ClusterSpec: ",Reason,?MODULE,?LINE]]),
+		   {error,Reason}
+	   end,
+    load_desired_state(T,ClusterSpec,[Result|Acc]).

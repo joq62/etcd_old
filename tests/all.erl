@@ -30,6 +30,8 @@ start([_ClusterSpec,_HostSpec])->
     ok=host_spec(),
     ok=appl_spec(),
     ok=appl_deployment(),
+    ok=parent_desired_state("cluster_test"),
+    ok=pod_appl_desired_state("cluster_test"),
   %  ok=test_2(),
   %  ok=test_3(),
    
@@ -38,6 +40,44 @@ start([_ClusterSpec,_HostSpec])->
     timer:sleep(2000),
 
     ok.
+
+
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+pod_appl_desired_state(ClusterSpec)->
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    AllNodes=test_nodes:get_nodes(),
+    [N1,N2,N3,N4]=AllNodes,
+    
+    ok=pod_desired_state_test:start(N1,ClusterSpec),
+    ok=pod_desired_state_test:start(N2,ClusterSpec),
+    ok=pod_desired_state_test:start(N3,ClusterSpec),
+    ok=pod_desired_state_test:start(N4,ClusterSpec),
+    
+    ok.
+    
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+parent_desired_state(ClusterSpec)->
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    AllNodes=test_nodes:get_nodes(),
+    [N1,N2,N3,N4]=AllNodes,
+    
+    ok=parent_desired_state_test:start(N1,ClusterSpec),
+    ok=parent_desired_state_test:start(N2,ClusterSpec),
+    ok=parent_desired_state_test:start(N3,ClusterSpec),
+    ok=parent_desired_state_test:start(N4,ClusterSpec),
+    
+    ok.
+    
+
+    
 
 %%--------------------------------------------------------------------
 %% @doc

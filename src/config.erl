@@ -51,12 +51,19 @@ start()->
     Ok_ApplDeployment=[X||{ok,X}<-ApplDeploymentList],
     Err_ApplDeployment=[X||{error,X}<-ApplDeploymentList],
 
+    %% Parent create and load 
     ok=db_parent_desired_state:create_table(),
+    []=[{error,ClusterSpec}||ClusterSpec<-db_cluster_spec:get_all_id(),
+				       ok/=db_parent_desired_state:load_desired_state(ClusterSpec)],
+    %% Pod and Appl create and load 
     ok=db_pod_desired_state:create_table(),
-    % to be removed
-    %ok=db_appl_instance:create_table(),
-   % ok=db_config:create_table(),
+    []=[{error,ClusterSpec}||ClusterSpec<-db_cluster_spec:get_all_id(),
+			      ok/=db_pod_desired_state:load_desired_state_pod(ClusterSpec)],
+    []=[{error,ClusterSpec}||ClusterSpec<-db_cluster_spec:get_all_id(),
+			     ok/=db_pod_desired_state:load_desired_state_appl(ClusterSpec)],
    
+    
+
     Test=lists:append([Ok_ClusterSpec,Ok_HostSpec,Ok_ApplSpec,Ok_ApplDeployment,
 		       Err_ClusterSpec,Err_HostSpec,Err_ApplSpec,Err_ApplDeployment]),
 		       
