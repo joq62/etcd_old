@@ -151,6 +151,7 @@ get_pods_based_app(App)->
                     [] ->
 			mnesia:abort({error,["empty table "]});
 		    Z->
+			io:format("Z ~p~n",[{Z,?MODULE,?LINE,?FUNCTION_NAME}]),
 			PodsApplSpecs=[{R#?RECORD.pod_node,R#?RECORD.appl_spec_list}||R<-Z],
 			check(PodsApplSpecs,App,[])
                 end
@@ -162,8 +163,10 @@ get_pods_based_app(App)->
 check([],_,Pods)->
     Pods;
 check([{Pod,ApplSpecList}|T],WantedApp,Acc) ->
+    io:format("Pod,ApplSpecListWantedApp ~p~n",[{Pod,ApplSpecList,WantedApp,?MODULE,?LINE,?FUNCTION_NAME}]),
     L=[Pod||AppSpec<-ApplSpecList,
-	    {ok,WantedApp}==sd:call(db_etcd,db_appl_spec,read,[app,AppSpec],5000)],
+	    {ok,WantedApp}==sd:call(etcd,db_appl_spec,read,[app,AppSpec],5000)],
+    io:format("L, ~p~n",[{L,?MODULE,?LINE,?FUNCTION_NAME}]),
     check(T,WantedApp,lists:append(L,Acc)).     
 
     
