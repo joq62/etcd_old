@@ -21,7 +21,7 @@
 -export([member/1]).
 -export([pods/1]).
 -export([add_appl_list/2,delete_appl_list/2,
-	 get_pods_based_app/1]).
+	 get_pods_based_app/2]).
 
 -export([load_desired_state_pod/1,
 	 load_desired_state_appl/1]).
@@ -144,9 +144,10 @@ pods(ClusterSpec)->
 %% @spec
 %% @end
 %%--------------------------------------------------------------------
-get_pods_based_app(App)->
+get_pods_based_app(App,ClusterSpec)->
     F = fun() ->
-                Z=do(qlc:q([X || X <- mnesia:table(?TABLE)])),
+                Z=do(qlc:q([X || X <- mnesia:table(?TABLE),		
+				 X#?RECORD.cluster_spec==ClusterSpec])),
                 case Z of
                     [] ->
 			mnesia:abort({error,["empty table "]});
