@@ -19,7 +19,9 @@
 -export([read_all/0,read/1,read/2,get_all_id/0]).
 -export([do/1]).
 -export([member/1]).
+-export([pods/1]).
 -export([load_desired_state/1]).
+
 
 
 %%--------------------------------------------------------------------
@@ -105,6 +107,23 @@ member(ParentNode)->
     Member.
 
 
+
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+pods(ClusterSpec)->
+    Z=do(qlc:q([X || X <- mnesia:table(?TABLE),		
+		     X#?RECORD.cluster_spec==ClusterSpec])),
+    Result=case Z of
+	       []->
+		  [];
+	       _->
+		   Pods=[R#?RECORD.parent_node||R<-Z],
+		   Pods
+	   end,
+    Result.
 %%--------------------------------------------------------------------
 %% @doc
 %% @spec
