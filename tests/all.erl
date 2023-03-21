@@ -27,6 +27,7 @@ start([_ClusterSpec,_HostSpec])->
     
     ok=setup(),
     ok=test_1(),
+    ok=cluster_spec("cluster_test"),
     ok=host_spec(),
     ok=appl_spec(),
     ok=appl_deployment(),
@@ -42,6 +43,23 @@ start([_ClusterSpec,_HostSpec])->
     ok.
 
 
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+cluster_spec(ClusterSpec)->
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    AllNodes=test_nodes:get_nodes(),
+    [N1,N2,N3,N4]=AllNodes,
+    
+    ok=cluster_spec_test:start(N1,ClusterSpec),
+    ok=cluster_spec_test:start(N2,ClusterSpec),
+    ok=cluster_spec_test:start(N3,ClusterSpec),
+    ok=cluster_spec_test:start(N4,ClusterSpec),
+    
+    ok.
+    
 %%--------------------------------------------------------------------
 %% @doc
 %% @spec

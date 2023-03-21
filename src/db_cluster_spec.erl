@@ -20,6 +20,7 @@
 -export([do/1]).
 -export([member/1]).
 -export([git_clone_load/0]).
+-export([read_cookie/1,read_cookie/2]).
 
 
 %%--------------------------------------------------------------------
@@ -102,11 +103,53 @@ member(ClusterSpec)->
     Member.
 
 
+
 %%--------------------------------------------------------------------
 %% @doc
 %% @spec
 %% @end
 %%--------------------------------------------------------------------
+read_cookie(Key,Cookie)->
+    Return=case read_cookie(Cookie) of
+	       []->
+		   {error,[eexist,Cookie,?MODULE,?LINE]};
+	       {ClusterSpec,Cookie,RootDir,Pods} ->
+		   case  Key of
+		      cluster_spec->
+			   {ok,ClusterSpec};
+		       cookie->
+			   {ok,Cookie};
+		       root_dir->
+			   {ok,RootDir};
+		       pods->
+			   {ok,Pods};
+		       Err ->
+			   {error,['Key eexists',Err,ClusterSpec,?MODULE,?LINE]}
+		   end
+	   end,
+    Return.
+
+read_cookie(Cookie)->
+    Z=do(qlc:q([X || X <- mnesia:table(?TABLE),		
+		     X#?RECORD.cookie==Cookie])),
+    Result=case Z of
+	       []->
+		  [];
+	       _->
+		   [Info]=[{Record#?RECORD.cluster_spec,Record#?RECORD.cookie,
+			    Record#?RECORD.root_dir,Record#?RECORD.pods}||Record<-Z],
+		   Info
+	   end,
+    Result.
+
+    
+
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+
 
 read(Key,ClusterSpec)->
     Return=case read(ClusterSpec) of
