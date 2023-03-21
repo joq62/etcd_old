@@ -109,10 +109,10 @@ member(ClusterSpec)->
 %% @spec
 %% @end
 %%--------------------------------------------------------------------
-read_cookie(Key,Cookie)->
-    Return=case read_cookie(Cookie) of
+read_cookie(Key,CookieAtom)->
+    Return=case read_cookie(CookieAtom) of
 	       []->
-		   {error,[eexist,Cookie,?MODULE,?LINE]};
+		   {error,[eexist,CookieAtom,?MODULE,?LINE]};
 	       {ClusterSpec,Cookie,RootDir,Pods} ->
 		   case  Key of
 		      cluster_spec->
@@ -129,7 +129,8 @@ read_cookie(Key,Cookie)->
 	   end,
     Return.
 
-read_cookie(Cookie)->
+read_cookie(CookieAtom)->
+    Cookie=atom_to_list(CookieAtom),
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE),		
 		     X#?RECORD.cookie==Cookie])),
     Result=case Z of

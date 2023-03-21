@@ -85,10 +85,10 @@ read_specs_test(Node)->
 
     
 
-    {ok,ClusterTest}=rpc:call(Node,db_cluster_spec,read_cookie,[cluster_spec,"cookie_cluster_test"],5000),
-    {ok,"cookie_cluster_test"}=rpc:call(Node,db_cluster_spec,read_cookie,[cookie,"cookie_cluster_test"],5000),
-    {ok,"cluster_test"}=rpc:call(Node,db_cluster_spec,read_cookie,[root_dir,"cookie_cluster_test"],5000),
-    {ok,[{3,"c200"},{3,"c201"}]}=rpc:call(Node,db_cluster_spec,read_cookie,[pods,"cookie_cluster_test"],5000),
+    {ok,ClusterTest}=rpc:call(Node,db_cluster_spec,read_cookie,[cluster_spec,cookie_cluster_test],5000),
+    {ok,"cookie_cluster_test"}=rpc:call(Node,db_cluster_spec,read_cookie,[cookie,cookie_cluster_test],5000),
+    {ok,"cluster_test"}=rpc:call(Node,db_cluster_spec,read_cookie,[root_dir,cookie_cluster_test],5000),
+    {ok,[{3,"c200"},{3,"c201"}]}=rpc:call(Node,db_cluster_spec,read_cookie,[pods,cookie_cluster_test],5000),
 
   
     
