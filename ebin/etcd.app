@@ -8,7 +8,7 @@
               {modules,[config,db_appl_deployment,db_appl_instance,
                         db_appl_spec,db_cluster_instance,db_cluster_spec,
                         db_config,db_host_spec,db_parent_desired_state,
-                        db_pod_desired_state,etcd,etcd_app,etcd_server,
-                        etcd_sup,lib_db]},
+                        db_pod_desired_state,db_provider_spec,etcd,etcd_app,
+                        etcd_server,etcd_sup,lib_db]},
               {licenses,["Apache-2.0"]},
               {links,[]}]}.

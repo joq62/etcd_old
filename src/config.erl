@@ -29,7 +29,12 @@
 %% @end
 %%--------------------------------------------------------------------
 start()->
-    ok=db_cluster_spec:create_table(),
+    ok=db_provider_spec:create_table(),
+    ProviderSpecList=db_provider_spec:git_clone_load(),
+    Ok_ProviderSpec=[X||{ok,X}<-ProviderSpecList],
+    Err_ProviderSpec=[X||{error,X}<-ProviderSpecList],
+
+   ok=db_cluster_spec:create_table(),
     ClusterSpecList=db_cluster_spec:git_clone_load(),
     Ok_ClusterSpec=[X||{ok,X}<-ClusterSpecList],
     Err_ClusterSpec=[X||{error,X}<-ClusterSpecList],
@@ -64,13 +69,15 @@ start()->
    
     
 
-    Test=lists:append([Ok_ClusterSpec,Ok_HostSpec,Ok_ApplSpec,Ok_ApplDeployment,
-		       Err_ClusterSpec,Err_HostSpec,Err_ApplSpec,Err_ApplDeployment]),
+    Test=lists:append([ Ok_ProviderSpec,Ok_ClusterSpec,Ok_HostSpec,Ok_ApplSpec,Ok_ApplDeployment,
+		        Err_ProviderSpec,Err_ClusterSpec,Err_HostSpec,Err_ApplSpec,Err_ApplDeployment]),
 		       
 
     Result=case Test of
 	       []->
-		   {error,[{cluster,spec,Ok_ClusterSpec,Err_ClusterSpec},
+		   {error,[
+			   {provider_spec, Ok_ProviderSpec,Err_ProviderSpec},
+			   {cluster,spec,Ok_ClusterSpec,Err_ClusterSpec},
 			   {host_spec,Ok_HostSpec,Err_HostSpec},
 			   {appl_spec,Ok_ApplSpec,Err_ApplSpec},
 			   {appl_deployment,Ok_ApplDeployment,Err_ApplDeployment}]};
