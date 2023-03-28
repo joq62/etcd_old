@@ -36,9 +36,15 @@
 %% @end
 %%--------------------------------------------------------------------
 dynamic_db_init([])->
+    mnesia:stop(),
+    mnesia:delete_schema([node()]),
+    mnesia:start(),
     %% First node - create the needed tables
     config:start();
 dynamic_db_init(Nodes) ->
+    mnesia:stop(),
+    mnesia:delete_schema([node()]),
+    mnesia:start(),
     add_extra_nodes(Nodes).
 
 %%--------------------------------------------------------------------

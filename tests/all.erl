@@ -155,7 +155,6 @@ host_spec()->
     ok=rpc:call(N3,application,start,[sd],5000), 
     ok=rpc:call(N3,application,start,[etcd],5000),
     pong=rpc:call(N3,etcd,ping,[],5000),
-    pong=rpc:call(N3,db,ping,[],5000),
        
     ok=host_spec_tests:start(N1),
     ok=host_spec_tests:start(N2),
@@ -203,8 +202,7 @@ appl_spec()->
     ok=rpc:call(N3,application,start,[sd],5000), 
     ok=rpc:call(N3,application,start,[etcd],5000),
     pong=rpc:call(N3,etcd,ping,[],5000),
-    pong=rpc:call(N3,db,ping,[],5000),
-       
+  
     ok=appl_spec_tests:start(N1),
     ok=appl_spec_tests:start(N2),
     ok=appl_spec_tests:start(N3),
@@ -251,7 +249,7 @@ appl_deployment()->
     ok=rpc:call(N3,application,start,[sd],5000), 
     ok=rpc:call(N3,application,start,[etcd],5000),
     pong=rpc:call(N3,etcd,ping,[],5000),
-    pong=rpc:call(N3,db,ping,[],5000),
+  
        
     ok=appl_deployment_tests:start(N1),
     ok=appl_deployment_tests:start(N2),
@@ -279,8 +277,7 @@ test_1()->
     %% N1
     ok=rpc:call(N1,application,start,[etcd],5000),
     pong=rpc:call(N1,etcd,ping,[],5000),
-    pong=rpc:call(N1,db,ping,[],5000),
-
+    
     [N1]=lists:sort(rpc:call(N1,mnesia,system_info,[running_db_nodes],5000)),
     io:format("N1 dist OK! ~p~n",[{?MODULE,?LINE}]),
  %   yes=rpc:call(N1,mnesia,system_info,[],5000),
@@ -288,7 +285,7 @@ test_1()->
     %% N2
     ok=rpc:call(N2,application,start,[etcd],5000),
     pong=rpc:call(N2,etcd,ping,[],5000),
-    pong=rpc:call(N2,db,ping,[],5000),
+%    pong=rpc:call(N2,db,ping,[],5000),
     [N1,N2]=lists:sort(rpc:call(N1,mnesia,system_info,[running_db_nodes],5000)),
     [N1,N2]=lists:sort(rpc:call(N2,mnesia,system_info,[running_db_nodes],5000)),
  %   yes=rpc:call(N2,mnesia,system_info,[],5000),
@@ -297,7 +294,7 @@ test_1()->
   %% N3
     ok=rpc:call(N3,application,start,[etcd],5000),
     pong=rpc:call(N3,etcd,ping,[],5000),
-    pong=rpc:call(N3,db,ping,[],5000),
+%    pong=rpc:call(N3,db,ping,[],5000),
   
     [N1,N2,N3]=lists:sort(rpc:call(N1,mnesia,system_info,[running_db_nodes],5000)),
     [N1,N2,N3]=lists:sort(rpc:call(N2,mnesia,system_info,[running_db_nodes],5000)),
@@ -307,7 +304,7 @@ test_1()->
  %% N4
     ok=rpc:call(N4,application,start,[etcd],5000),
     pong=rpc:call(N4,etcd,ping,[],5000),
-    pong=rpc:call(N4,db,ping,[],5000),
+ %   pong=rpc:call(N4,db,ping,[],5000),
     [N1,N2,N3,N4]=lists:sort(rpc:call(N1,mnesia,system_info,[running_db_nodes],5000)),
     [N1,N2,N3,N4]=lists:sort(rpc:call(N2,mnesia,system_info,[running_db_nodes],5000)),
     [N1,N2,N3,N4]=lists:sort(rpc:call(N3,mnesia,system_info,[running_db_nodes],5000)),

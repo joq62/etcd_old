@@ -66,7 +66,8 @@ stop()-> gen_server:call(?MODULE, {stop},infinity).
 init([]) ->
        
     %%
-    {ok,_}=db_server:start(etcd),
+    AllEtcdNodes=sd:get_node(etcd),
+    lib_db:dynamic_db_init(AllEtcdNodes),
     io:format("Start ~p~n",[{node(),?MODULE,?LINE,?FUNCTION_NAME}]),
   
     
