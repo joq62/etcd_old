@@ -45,7 +45,7 @@ read_specs_test(Node)->
     true=lists:member("c50",AllHosts),
 
    {"c50","c50","192.168.1.50",22,"joq62",
-    "festum01",[],"host",'host@c50'
+    "festum01",[],"host_controller",'host_controller@c50'
    }=rpc:call(Node,db_host_spec,read,["c50"],5000),
     
     {ok,"c50"}=rpc:call(Node,db_host_spec,read,[hostname,"c50"],5000),
@@ -54,8 +54,8 @@ read_specs_test(Node)->
     {ok,"joq62"}=rpc:call(Node,db_host_spec,read,[uid,"c50"],5000),
     {ok,"festum01"}=rpc:call(Node,db_host_spec,read,[passwd,"c50"],5000),
     {ok,[]}=rpc:call(Node,db_host_spec,read,[application_config,"c50"],5000),
-    {ok,"host"}=rpc:call(Node,db_host_spec,read,[connect_node_name,"c50"],5000),
-    {ok,'host@c50'}=rpc:call(Node,db_host_spec,read,[connect_node,"c50"],5000),
+    {ok,"host_controller"}=rpc:call(Node,db_host_spec,read,[connect_node_name,"c50"],5000),
+    {ok,'host_controller@c50'}=rpc:call(Node,db_host_spec,read,[connect_node,"c50"],5000),
 
 
     {error,[eexist,"glurk",db_host_spec,_]}=rpc:call(Node,db_host_spec,read,[ssh_port,"glurk"],5000),
