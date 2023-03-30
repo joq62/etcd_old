@@ -16,7 +16,7 @@
 %% External exports
 
 -export([create_table/0,create_table/2,add_node/2]).
--export([create/7,delete/1]).
+-export([create/9,delete/1]).
 -export([read_all/0,read/1,read/2,get_all_id/0]).
 -export([do/1]).
 -export([member/1]).
@@ -60,7 +60,7 @@ add_node(Node,StorageType)->
 %% @end
 %%--------------------------------------------------------------------
 
-create(SpecId,HostName,LocalIp,SshPort,Uid,Passwd,ApplConfig)->
+create(SpecId,HostName,LocalIp,SshPort,Uid,Passwd,ApplConfig,ConnectNodeName,ConnectNode)->
     Record=#?RECORD{
 		    spec_id=SpecId,
 		    hostname=HostName,
@@ -68,7 +68,9 @@ create(SpecId,HostName,LocalIp,SshPort,Uid,Passwd,ApplConfig)->
 		    ssh_port=SshPort,
 		    uid=Uid,
 		    passwd=Passwd,
-		    application_config=ApplConfig
+		    application_config=ApplConfig,
+		    connect_node_name=ConnectNodeName,
+		    connect_node=ConnectNode
 		   },
     F = fun() -> mnesia:write(Record) end,
     mnesia:transaction(F).
@@ -109,48 +111,59 @@ member(SpecId)->
 
 read_all() ->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE)])),
-    [{SpecId,HostName,LocalIp,SshPort,Uid,Passwd,ApplConfig}||{?RECORD,SpecId,HostName,LocalIp,SshPort,Uid,Passwd,ApplConfig}<-Z].
+    [{R#?RECORD.spec_id,R#?RECORD.hostname,R#?RECORD.local_ip,R#?RECORD.ssh_port,
+      R#?RECORD.uid,R#?RECORD.passwd,R#?RECORD.application_config,
+      R#?RECORD.connect_node_name,R#?RECORD.connect_node}||R<-Z].
 
-read(Object)->
+read(SpecId)->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE),		
-		     X#?RECORD.spec_id==Object])),
+		     X#?RECORD.spec_id==SpecId])),
     Result=case Z of
 	       []->
 		  [];
 	       _->
-		   [Info]=[{SpecId,HostName,LocalIp,SshPort,Uid,Passwd,ApplConfig}||{?RECORD,SpecId,HostName,LocalIp,SshPort,Uid,Passwd,ApplConfig}<-Z],
+		   [Info]=[{R#?RECORD.spec_id,R#?RECORD.hostname,R#?RECORD.local_ip,
+			    R#?RECORD.ssh_port,R#?RECORD.uid,R#?RECORD.passwd,
+			    R#?RECORD.application_config,R#?RECORD.connect_node_name,
+			    R#?RECORD.connect_node}||R<-Z],
 		   Info
 	   end,
     Result.
 
 read(Key,SpecId)->
-    Return=case read(SpecId) of
+    Z=do(qlc:q([X || X <- mnesia:table(?TABLE),		
+		     X#?RECORD.spec_id==SpecId])),
+    Result=case Z of
 	       []->
 		   {error,[eexist,SpecId,?MODULE,?LINE]};
-	       {_SpecId,HostName,LocalIp,SshPort,Uid,Passwd,ApplConfig} ->
+	       [R] ->
 		   case  Key of
 		       hostname->
-			   {ok,HostName};
+			   {ok,R#?RECORD.hostname};
 		       local_ip->
-			   {ok,LocalIp};
+			   {ok,R#?RECORD.local_ip};
 		       ssh_port->
-			   {ok,SshPort};
+			   {ok,R#?RECORD.ssh_port};
 		       uid->
-			   {ok,Uid};
+			   {ok,R#?RECORD.uid};
 		       passwd->
-			   {ok,Passwd};
+			   {ok,R#?RECORD.passwd};
 		       application_config->
-			   {ok,ApplConfig};
+			   {ok,R#?RECORD.application_config};
+		       connect_node_name->
+			   {ok,R#?RECORD.connect_node_name};
+		       connect_node->
+			   {ok,R#?RECORD.connect_node};
 		       Err ->
 			   {error,['Key eexists',Err,SpecId,?MODULE,?LINE]}
 		   end
 	   end,
-    Return.
+    Result.
 
 
 get_all_id()->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE)])),
-    [SpecId||{?RECORD,SpecId,_HostName,_LocalIp,_SshPort,_Uid,_Passwd,_ApplConfig}<-Z].
+    [R#?RECORD.spec_id||R<-Z].
     
 
 %%--------------------------------------------------------------------
@@ -240,9 +253,10 @@ from_file([FileName|T],Dir,Acc)->
 		   {uid,Uid}=lists:keyfind(uid,1,Info),
 		   {passwd,Passwd}=lists:keyfind(passwd,1,Info),
 		   {application_config,ApplConfig}=lists:keyfind(application_config,1,Info),
+		   {connect_node_name,ConnectNodeName}=lists:keyfind(connect_node_name,1,Info),
+		   {connect_node,ConnectNode}=lists:keyfind(connect_node,1,Info),		 
 		 
-		 
-		   case create(SpecId,HostName,LocalIp,SshPort,Uid,Passwd,ApplConfig) of
+		   case create(SpecId,HostName,LocalIp,SshPort,Uid,Passwd,ApplConfig,ConnectNodeName,ConnectNode) of
 		       {atomic,ok}->
 			   [{ok,FileName}|Acc];
 		       {error,Reason}->

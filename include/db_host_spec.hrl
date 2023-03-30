@@ -10,5 +10,7 @@
 		 ssh_port,
 		 uid,
 		 passwd,
-		 application_config
+		 application_config,
+		 connect_node_name,
+		 connect_node
 		}).
