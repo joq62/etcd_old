@@ -15,7 +15,7 @@
 
 %% External exports
 -export([create_table/0,create_table/2,add_node/2]).
--export([create/11,delete/1]).
+-export([create/12,delete/1]).
 -export([read_all/0,read/1,read/2,get_all_id/0]).
 -export([do/1]).
 -export([git_clone_load/0]).
@@ -60,12 +60,13 @@ add_node(Node,StorageType)->
 %% @end
 %%--------------------------------------------------------------------
 
-create(Spec,ApplName,Vsn,Dir,NodeName,Cookie,CloneCmd,TarCmd,StartCmd,Num,Affinity)->
+create(Spec,ApplName,Vsn,Dir,NodeName,Cookie,TarFile,CloneCmd,TarCmd,StartCmd,Num,Affinity)->
     Record=#?RECORD{
 		    spec=Spec,
 		    appl_name=ApplName,
 		    vsn=Vsn,
 		    dir=Dir,
+		    tar_file=TarFile,
 		    node_name=NodeName,
 		    cookie=Cookie,
 		    clone_cmd=CloneCmd,
@@ -115,6 +116,8 @@ read(Key,Spec)->
 			   {ok,R#?RECORD.node_name};
 		       cookie->
 			   {ok,R#?RECORD.cookie};
+		       tar_file->
+			   {ok,R#?RECORD.tar_file};
 		       clone_cmd->
 			   {ok,R#?RECORD.clone_cmd};
 		        tar_cmd->
@@ -150,6 +153,7 @@ read(Spec)->
 	       _->
 		   [Info]=[{R#?RECORD.spec ,R#?RECORD.appl_name ,R#?RECORD.vsn ,
 			    R#?RECORD.dir ,R#?RECORD.node_name,R#?RECORD.cookie ,
+			    R#?RECORD.tar_file,
 			    R#?RECORD.clone_cmd,R#?RECORD.tar_cmd,R#?RECORD.start_cmd,
 			    R#?RECORD.num,R#?RECORD.affinity}||R<-Z],
 		   Info
@@ -241,12 +245,13 @@ from_file([FileName|T],Dir,Acc)->
 		   {dir,ProviderDir}=lists:keyfind(dir,1,Info),
 		   {node_name,NodeName}=lists:keyfind(node_name,1,Info),
 		   {cookie,Cookie}=lists:keyfind(cookie,1,Info),
+		   {tar_file,TarFile}=lists:keyfind(tar_file,1,Info),
 		   {clone_cmd,CloneCmd}=lists:keyfind(clone_cmd,1,Info),
 		   {tar_cmd,TarCmd}=lists:keyfind(tar_cmd,1,Info),
 		   {start_cmd,StartCmd}=lists:keyfind(start_cmd,1,Info),
 		   {num,Num}=lists:keyfind(num,1,Info),
 		   {affinity,Affinity}=lists:keyfind(affinity,1,Info),
-		   case create(SpecId,ApplName,Vsn,ProviderDir,NodeName,Cookie,CloneCmd,TarCmd,StartCmd,Num,Affinity) of
+		   case create(SpecId,ApplName,Vsn,ProviderDir,NodeName,Cookie,TarFile,CloneCmd,TarCmd,StartCmd,Num,Affinity) of
 		       {atomic,ok}->
 			   [{ok,FileName}|Acc];
 		       {error,Reason}->

@@ -10,6 +10,7 @@
 		 dir,
 		 node_name,
 		 cookie,
+		 tar_file,
 		 clone_cmd,
 		 tar_cmd,
 		 start_cmd,
