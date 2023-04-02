@@ -18,6 +18,7 @@
 -export([create/1,delete/1]).
 -export([read_all/0,read/1,read/2,get_all_id/0]).
 -export([do/1]).
+-export([member/1]).
 -export([git_clone_load/0]).
 
 %%--------------------------------------------------------------------
@@ -75,6 +76,21 @@ delete(Spec) ->
 
         end,
     mnesia:transaction(F).
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+member(SpecId)->
+    Z=do(qlc:q([X || X <- mnesia:table(?TABLE),		
+		     X#?RECORD.spec==SpecId])),
+    Member=case Z of
+	       []->
+		   false;
+	       _->
+		   true
+	   end,
+    Member.
 
 %%--------------------------------------------------------------------
 %% @doc
