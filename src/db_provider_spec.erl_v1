@@ -15,7 +15,7 @@
 
 %% External exports
 -export([create_table/0,create_table/2,add_node/2]).
--export([create/1,delete/1]).
+-export([create/12,delete/1]).
 -export([read_all/0,read/1,read/2,get_all_id/0]).
 -export([do/1]).
 -export([git_clone_load/0]).
@@ -61,6 +61,20 @@ add_node(Node,StorageType)->
 %%--------------------------------------------------------------------
 
 create(Record)->
+    Record=Data#?RECORD{
+			spec=Spec,
+			appl_name=ApplName,
+			vsn=Vsn,
+			dir=Dir,
+			tar_file=TarFile,
+			node_name=NodeName,
+			cookie=Cookie,
+			clone_cmd=CloneCmd,
+			tar_cmd=TarCmd,
+			start_cmd=StartCmd,
+			num=Num,
+			affinity=Affinity		   
+		       },
     F = fun() -> mnesia:write(Record) end,
     mnesia:transaction(F).
 
@@ -96,22 +110,16 @@ read(Key,Spec)->
 			   {ok,R#?RECORD.appl_name};
 		       vsn->
 			   {ok,R#?RECORD.vsn};
-		       app_name->
-			   {ok,R#?RECORD.app_name};
-		       app->
-			   {ok,R#?RECORD.app};
 		       dir->
 			   {ok,R#?RECORD.dir};
 		       node_name->
 			   {ok,R#?RECORD.node_name};
 		       cookie->
 			   {ok,R#?RECORD.cookie};
-		       pa_args->
-			   {ok,R#?RECORD.pa_args};
 		       tar_file->
 			   {ok,R#?RECORD.tar_file};
-		       git_path->
-			   {ok,R#?RECORD.git_path};
+		       clone_cmd->
+			   {ok,R#?RECORD.clone_cmd};
 		        tar_cmd->
 			   {ok,R#?RECORD.tar_cmd};
 		       start_cmd->
@@ -133,10 +141,8 @@ get_all_id()->
     
 read_all() ->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE)])),
-    [{R#?RECORD.spec,R#?RECORD.appl_name,R#?RECORD.vsn,R#?RECORD.app_name,R#?RECORD.app,R#?RECORD.dir,
-      R#?RECORD.node_name,R#?RECORD.cookie,R#?RECORD.git_path,R#?RECORD.pa_args,
-      R#?RECORD.tar_cmd,R#?RECORD.start_cmd,R#?RECORD.num,R#?RECORD.affinity
-     }||R<-Z].
+    [{R#?RECORD.spec ,R#?RECORD.appl_name ,R#?RECORD.vsn ,R#?RECORD.dir ,R#?RECORD.node_name,R#?RECORD.cookie ,
+      R#?RECORD.clone_cmd,R#?RECORD.tar_cmd,R#?RECORD.start_cmd,R#?RECORD.num,R#?RECORD.affinity}||R<-Z].
 
 read(Spec)->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE),		
@@ -145,10 +151,11 @@ read(Spec)->
 	       []->
 		  [];
 	       _->
-		   [Info]=[{R#?RECORD.spec,R#?RECORD.appl_name,R#?RECORD.vsn,R#?RECORD.app_name,R#?RECORD.app,R#?RECORD.dir,
-			    R#?RECORD.node_name,R#?RECORD.cookie,R#?RECORD.git_path,R#?RECORD.pa_args,
-			    R#?RECORD.tar_cmd,R#?RECORD.start_cmd,R#?RECORD.num,R#?RECORD.affinity
-			   }||R<-Z],
+		   [Info]=[{R#?RECORD.spec ,R#?RECORD.appl_name ,R#?RECORD.vsn ,
+			    R#?RECORD.dir ,R#?RECORD.node_name,R#?RECORD.cookie ,
+			    R#?RECORD.tar_file,
+			    R#?RECORD.clone_cmd,R#?RECORD.tar_cmd,R#?RECORD.start_cmd,
+			    R#?RECORD.num,R#?RECORD.affinity}||R<-Z],
 		   Info
 	   end,
     Result.
@@ -248,7 +255,7 @@ from_file([FileName|T],Dir,Acc)->
 		   {num,Num}=lists:keyfind(num,1,Info),
 		   {affinity,Affinity}=lists:keyfind(affinity,1,Info),
 		   Record=#?RECORD{
-				   spec=SpecId,
+				   spec_id=SpecId,
 				   appl_name=ApplName,
 				   vsn=Vsn,
 				   app_name=AppName,
@@ -258,15 +265,15 @@ from_file([FileName|T],Dir,Acc)->
 				   cookie=Cookie,
 				   pa_args=PaArgs,
 				   tar_file=TarFile,
-				   git_path=GitPath,
+				   it_path=GitPath,
 				   tar_cmd=TarCmd,
 				   start_cmd=StartCmd,
 				   num=Num,
 				   affinity=Affinity
 				   },
 
-		   %io:format("Record  ~p~n",[{Record,?MODULE,?LINE}]),
-		   case create(Record) of
+	%	   case create(SpecId,ApplName,Vsn,ProviderDir,NodeName,Cookie,TarFile,CloneCmd,TarCmd,StartCmd,Num,Affinity) of
+		       case create(Record) of
 		       {atomic,ok}->
 			   [{ok,FileName}|Acc];
 		       {error,Reason}->
